@@ -171,6 +171,7 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 #### Assumptions
 
 - Max range: 500 miles
+- Truck Starts with full tank
 - 10 MPG
 - Minimize total fuel cost
 
@@ -186,9 +187,6 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 - Refuel
 - Continue
 
-  ```
-  This greedy approach works efficiently under fixed MPG and price-per-gallon conditions.
-  ```
 
 ## Performance Strategy
 

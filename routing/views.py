@@ -44,6 +44,7 @@ class OptimizeFuelRoute(APIView):
         # Currently using memcache but Redis or RabbitMQ are my choices
         cache_key = build_cache_key(start, end)
         result = cache.get(cache_key)
+        
         if result:
             return self.response(result)
 
@@ -67,7 +68,7 @@ class OptimizeFuelRoute(APIView):
             "fuel_stops": breakdown,
             "total_cost": round(total_cost, 2),
         }
-        cache.set(cache_key, result, timeout=60 * 60 * 24)
+        cache.set(cache_key, result, timeout=60 * 60 * 6) # clear after 6hrs
         return self.response(result)
     
     def response(self,*args, **kwargs):

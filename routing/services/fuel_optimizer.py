@@ -14,16 +14,18 @@ class FuelOptimizer:
         self.polyline = polyline
         self.start_point = Point(start_coords, srid=4326)
         self.total_distance_miles = total_distance_miles
+        self.nearby_radius = 5 # miles
     
     def get_stops_near_route(self):
         qs = TruckStop.objects.none()
 
         for point in self.polyline[::20]:  # sample every ~20 points
             nearby = TruckStop.objects.filter(
-                location__distance_lte=(point, D(mi=5))
+                location__distance_lte=(point, D(mi=self.nearby_radius))
             )
 
             qs = qs | nearby
+
         stops = (
             qs.distinct()
             .annotate(dist_from_start=Distance("location", self.start_point))
@@ -32,16 +34,6 @@ class FuelOptimizer:
 
         return list(stops)
 
-    def segment_route(self):
-        segments = []
-        remaining = self.total_distance_miles
-
-        while remaining > 0:
-            segment = min(remaining, self.MAX_RANGE_MILES)
-            segments.append(segment)
-            remaining -= segment
-
-        return segments
 
     def optimize(self):
         stops = self.get_stops_near_route()
@@ -50,6 +42,7 @@ class FuelOptimizer:
         total_cost = Decimal("0.00")
 
         current_position = 0  # miles from start
+        sum_of_jounry_fuel = float(self.MAX_RANGE_MILES)  # miles from start
 
         while current_position < self.total_distance_miles:
 
@@ -67,7 +60,10 @@ class FuelOptimizer:
             ]
 
             if not reachable:
-                raise ValueError('No reachable fuel stops')
+                if self.total_distance_miles - (current_position+self.MAX_RANGE_MILES) > self.MAX_RANGE_MILES:
+                    print(self.total_distance_miles - (current_position+self.MAX_RANGE_MILES))
+                    raise ValueError('No reachable fuel stops')
+                break
 
             # Choose cheapest among reachable
             cheapest = min(reachable, key=lambda x: x.retail_price)
@@ -78,6 +74,7 @@ class FuelOptimizer:
             cost = gallons_used * Decimal(cheapest.retail_price)
 
             total_cost += cost
+            sum_of_jounry_fuel += distance_to_stop
 
             chosen_stops.append({
                 "opis_id": cheapest.opis_id,
@@ -85,7 +82,7 @@ class FuelOptimizer:
                 "city": cheapest.city,
                 "state": cheapest.state,
                 "price": float(cheapest.retail_price),
-                "distance_from_start": round(cheapest.dist_from_start.mi, 2),
+                # "distance_from_start": round(cheapest.dist_from_start.mi, 2),
                 "gallons": round(gallons_used, 2),
                 "cost": round(cost, 2),
             })
