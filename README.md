@@ -4,7 +4,6 @@ A Django + PostGIS API that calculates the most cost-effective fuel stops along 
 
 ### The system:
 
-```
 1. Accepts start and end locations
 
 2. Retrieves the driving route
@@ -16,7 +15,7 @@ A Django + PostGIS API that calculates the most cost-effective fuel stops along 
 5. Minimizes external API calls
 
 6. Returns results quickly using caching
-```
+
 
 ### Problem Statement
 
@@ -87,7 +86,7 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 #### Caching Strategy
 
 - Route results cached
-- Hashed cache keys (memcached-safe)
+- Hashed cache keys (memcached-safe) - (Recommend Redis/RabbitMQ)
 - Avoids repeated routing API calls
 
 #### Scalable Design
@@ -98,12 +97,11 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 
 ### API Endpoint
 
-`POST /api/route/`
+`POST /api/v1/optimize-fuel`
 
-```bash
 # Request body
 # lon, lat order
-
+```json
 {
   "start": "-119.7554, 41.7585",
   "end": "-85.3866, 31.2217"
@@ -112,7 +110,7 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 
 #### Example Response
 
-```bash
+```json
 {
   "distance_miles": 2583.25,
   "fuel_stops": [
@@ -202,7 +200,7 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 - Caching
   - Hashed key strategy:
 
-  ```bash
+  ```python
   import hashlib
   def build_cache_key(start, end):
       raw = f"{round(start[0],4)}_{round(start[1],4)}-{round(end[0],4)}_{round(end[1],4)}"
@@ -218,21 +216,21 @@ Greedy selection of cheapest reachable fuel stop within 500-mile range.
 
 ### Clone Repository
 
-```
+```bash
 git clone <repo-url>
 cd fuel-router
 ```
 
 ### Create Virtual Environment
 
-```
+```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
 ### Install Dependencies
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -245,7 +243,7 @@ CREATE EXTENSION postgis;
 
 ### Run Migrations
 
-```
+```bash
 python manage.py migrate
 ```
 
@@ -267,7 +265,7 @@ OPENROUTE_API_KEY = open-route-secret-key
 
 ### Run Server
 
-```
+```bash
 python manage.py runserver
 ```
 
